@@ -289,7 +289,7 @@ All values are configurable via `appsettings.json`:
 | Section | What it controls                                                           |
 |---------|----------------------------------------------------------------------------|
 | `HomelabServices` | Service URLs, health endpoints, API keys, per-service alert behavior       |
-| `QBittorrent` | qBit connection (URL, credentials)                                         |
+| `QBittorrent` | qBit URL as seen from the PC (commands run there over SSH), optional `DirectBaseUrl` for the app's own HTTP calls (the Mac's loopback relay), credentials |
 | `DiskCheck` | Drives to monitor, SSH hosts, warning/critical thresholds                  |
 | `Syncthing` | API URL, key, folder ID                                                    |
 | `Pipeline` | SSH hosts (Mac + PC), paths, Plex library section IDs                      |
