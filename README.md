@@ -282,27 +282,6 @@ src/homelabBackend/
 └── appsettings.json            — tracked placeholders; real keys in Development.json
 ```
 
-## Setup
-
-```bash
-# Clone and restore
-git clone https://github.com/embmeals/homelabBackend.git
-cd homelabBackend
-dotnet restore
-
-# Configure (copy and edit with your service URLs/keys)
-cp src/homelabBackend/appsettings.json src/homelabBackend/appsettings.Development.json
-
-# Run locally
-dotnet run --project src/homelabBackend
-
-# Run tests
-dotnet test
-
-# Deploy to Mac
-bash scripts/deploy-to-mac.sh
-```
-
 ## Configuration
 
 All values are configurable via `appsettings.json`:
