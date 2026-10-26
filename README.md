@@ -142,8 +142,8 @@ The Overview tab carries a card showing recent GitHub Actions runs for this repo
 | Gmail Cleanup | Daily 4:15 AM | Archive old promos/social, apply label rules                                   |
 | Immich Maintenance | Daily 4:30 AM | Photo library stats, duplicate detection report                                |
 | Disk Usage Trend | Weekly Sun 3:30 AM | 30-day growth projection, alert if filling within 4 weeks                      |
-| Library Integrity | Weekly Sun 5 AM | Reconcile Radarr/Sonarr against disk — orphans, ghosts, duplicates             |
-| Library Integrity Remediation | Weekly Sun 5:30 AM | Clear ghost findings, behind a volume-health floor check                 |
+| Library Integrity | Weekly Sun 5 AM | Reconcile Radarr/Sonarr against the NAS folders they list through their own APIs — orphans, ghosts, duplicates |
+| Library Integrity Remediation | Weekly Sun 5:30 AM | Clear ghost findings, behind a folder-count floor read through Radarr/Sonarr |
 | Stale Media | Weekly Mon 3:45 AM | Flag unwatched media (>180 days), skipping anything marked watched; optionally auto-unmonitors (off by default) |
 | Monthly SLO Report | Monthly 1st 8 AM | Per-service uptime, disk growth, library growth, remediation stats             |
 
@@ -160,6 +160,7 @@ The Overview tab carries a card showing recent GitHub Actions runs for this repo
 | Start Downloads | Connect Mullvad VPN + start qBittorrent on PC |
 | Stop VPN | Disconnect Mullvad VPN                        |
 | Refresh Media Stats | Re-query Radarr/Sonarr for library counts     |
+| Rescan Library | Queue the Library Integrity scan now instead of waiting for Sunday |
 
 ## Infrastructure
 
@@ -304,7 +305,7 @@ All values are configurable via `appsettings.json`:
 | `BackupHealth` | SSH host, backups root path, warning/critical age, expected artifacts list |
 | `VpnWatchdog` | Enable toggle, reconnect cooldown minutes                                  |
 | `Remediation` | Enable toggle, lookback minutes, per-pattern rules (check → action)        |
-| `LibraryIntegrity` | SSH host, Movies/TV root paths, remediation toggle + folder floors          |
+| `LibraryIntegrity` | Remediation toggle + folder floors (folders are listed through Radarr/Sonarr, no paths needed) |
 | `GmailCleanup` | IMAP credentials, archive-age, label rules                                 |
 | `GitHub` | Owner, repo, PAT and page size for the CI status card                            |
 | `JobWatchdog` | Enable toggle, check interval, staleness threshold, startup grace          |
