@@ -124,7 +124,7 @@ The Overview tab carries a card showing recent GitHub Actions runs for this repo
 | Torrent Monitor | 5 min | SSH to PC, query qBit for stalled/errored downloads                            |
 | Syncthing | 5 min | Folder sync status via REST API                                                |
 | VPN Watchdog | 5 min | SSH to PC, detect Mullvad drop, auto-reconnect with cooldown                   |
-| Remediation | 5 min | Match recent pipeline findings to rules, dispatch known fixes with audit       |
+| Remediation | 5 min | Match recent pipeline findings to rules, dispatch known fixes with audit — DNS flush, and removing + blocklisting fake (`.exe`) releases from the Radarr/Sonarr queues |
 | Alert Notifications | 5 min | Route critical findings through the notification router                        |
 | Pipeline Health | 10 min | Drive mounts, qBit save path, arr queues, stale downloads, DNS, Plex libraries |
 | Docker Health | 10 min | Colima VM + every container status                                             |
