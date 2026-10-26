@@ -118,25 +118,27 @@ The Overview tab carries a card showing recent GitHub Actions runs for this repo
 
 ### Recurring Jobs
 
+Crons in `JobSchedules` are read in the Mac's local time zone, so `0 3 * * *` means 3 AM on the Mac. Pollers that share a cadence are staggered by minute offset (`1-59/5` fires at :01, :06, :11…) so the SSH hops and API calls do not all land on the same second; `service-health-check` keeps the round `*/5`. Keep that pattern when adding a poller: pick an unused offset for its cadence.
+
 | Job | Frequency | What it checks                                                                 |
 |-----|-----------|--------------------------------------------------------------------------------|
-| Service Health | 5 min | HTTP ping 8 services (incl. Bazarr on the NAS), measure response time          |
-| Torrent Monitor | 5 min | SSH to PC, query qBit for stalled/errored downloads                            |
-| Syncthing | 5 min | Folder sync status via REST API                                                |
-| VPN Watchdog | 5 min | SSH to PC, detect Mullvad drop, auto-reconnect with cooldown                   |
-| Remediation | 5 min | Match recent pipeline findings to rules, dispatch known fixes with audit — DNS flush, and removing + blocklisting fake (`.exe`) releases from the Radarr/Sonarr queues |
-| Alert Notifications | 5 min | Route critical findings through the notification router                        |
-| Pipeline Health | 10 min | Drive mounts, qBit save path, arr queues, stale downloads, DNS, Plex libraries |
-| Docker Health | 10 min | Colima VM + every container status                                             |
-| CI Status | 10 min | Pull recent GitHub Actions runs for this repo into SQLite                       |
-| Two Minds | 10 min | Music agents: signed-track age, 24h sessions, live session, player page — critical only once output stops. Also `two_minds_deploy` from deployed.json: unknown (ok) until first seen; missing after first observation or stale = warning; rollback or behind/skipped over 60 min = critical. Stale and lag conditions do not escalate while the PC is unreachable |
-| Tunnel Health | 15 min | HTTP check all Cloudflare Tunnel endpoints                                     |
-| Request Fulfillment | 15 min | Track Seerr requests end-to-end, flag any stuck > 48h                          |
+| Service Health | 5 min (`*/5`) | HTTP ping 8 services (incl. Bazarr on the NAS), measure response time          |
+| Alert Notifications | 5 min (`1-59/5`) | Route critical findings through the notification router                        |
+| VPN Watchdog | 5 min (`1-59/5`) | SSH to PC, detect Mullvad drop; reconnect only when `VpnWatchdog:AutoReconnect` is on |
+| Remediation | 5 min (`2-59/5`) | Match the latest pipeline finding per check to rules, dispatch known fixes with audit — DNS flush, and removing + blocklisting fake (`.exe`) releases from the Radarr/Sonarr queues |
+| Syncthing | 5 min (`3-59/5`) | Folder sync status via REST API                                                |
+| Torrent Monitor | 5 min (`4-59/5`) | SSH to PC, query qBit for stalled/errored downloads                            |
+| Pipeline Health | 10 min (`*/10`) | Media roots accessible (Radarr + Sonarr `/api/v3/rootfolder`), qBit save path, arr queues, stale downloads, DNS, Plex libraries |
+| CI Status | 10 min (`4-59/10`) | Pull recent GitHub Actions runs for this repo into SQLite                       |
+| Docker Health | 10 min (`6-59/10`) | Colima VM + every container status; a container seen last run but gone now gets an Ok "no longer present" row |
+| Two Minds | 10 min (`8-59/10`) | Music agents: signed-track age, 24h sessions, live session, player page — critical only once output stops. Also `two_minds_deploy` from deployed.json: unknown (ok) until first seen; missing after first observation or stale = warning; rollback or behind/skipped over 60 min = critical. Stale and lag conditions do not escalate while the PC is unreachable |
+| Tunnel Health | 15 min (`*/15`) | HTTP check all Cloudflare Tunnel endpoints                                     |
+| Request Fulfillment | 15 min (`7-59/15`) | Track Seerr requests end-to-end, flag any stuck > 48h                          |
 | Disk Space | 30 min | `df` on every disk in `DiskCheck` — the NAS media mount, the old Saved_Media drive (backup copy) and Backups |
 | Media Library Stats | 6 hours | Movie/show/episode counts from Radarr + Sonarr APIs                            |
 | Digest Flush | Daily 8 AM | Bundle warning-severity notifications into one email                           |
 | Backup Health | Daily 9 AM | SSH to Mac, verify backup age + expected artifacts                             |
-| Data Pruning | Daily 3 AM | Delete health check data older than 30 days — never watched dismissals         |
+| Data Pruning | Daily 3 AM | Delete health check data older than 32 days (so the monthly report on the 1st still sees day 1) — never watched dismissals         |
 | Docker Update Reporter | Daily 3:15 AM | Dashboard note of Watchtower container updates                                 |
 | Subtitle Gap | Daily 4 AM | Find missing subtitles in Bazarr, trigger searches                             |
 | Gmail Cleanup | Daily 4:15 AM | Archive old promos/social, apply label rules                                   |
@@ -217,9 +219,9 @@ Every job that used to send email directly now routes through an `INotificationR
 | `Critical` | Email + ntfy push | Paging events — service down, backup missing, VPN won't reconnect |
 | `Recovery` | Email + ntfy push | All-clear — a tracked alert resolved and stayed clear through the grace window |
 | `Warning` | Daily digest (one email at 8 AM) | Non-urgent — stale media report, disk trends, request stuck > 48h |
-| `Info` | Dashboard only | Informational — successful remediations, Docker update summaries |
+| `Info` | Daily digest (with the warnings) | Informational — successful remediations, Docker update summaries |
 
-This keeps the inbox quiet. Critical events page immediately on the phone via ntfy and arrive as email. Down/critical alerts are state-change based: one batched email when alerts appear, a reminder every `Notifications:ReminderMinutes` (default 6h) while they persist, and one `Recovery` notice once they stay clear through `Notifications:RecoveryGraceMinutes` (default 10m). Warnings accumulate in the `PendingDigestNotifications` table and flush once daily via `DigestFlushJob`. Info-level events land in logs and dashboard surfaces without touching email at all.
+This keeps the inbox quiet. Critical events page immediately on the phone via ntfy and arrive as email. Down/critical alerts are state-change based: one batched email when alerts appear, a reminder every `Notifications:ReminderMinutes` (default 6h) while they persist, and one `Recovery` notice once they stay clear through `Notifications:RecoveryGraceMinutes` (default 10m). Warnings accumulate in the `PendingDigestNotifications` table and flush once daily via `DigestFlushJob`. Info-level events ride along in the same digest, so a Docker update summary arrives once a day instead of never.
 
 ntfy push is optional. If `Ntfy.BaseUrl` isn't configured (it currently isn't), `NtfyChannel` silently no-ops and critical alerts arrive by email only.
 
@@ -294,6 +296,7 @@ All values are configurable via `appsettings.json`:
 | `DiskCheck` | Drives to monitor, SSH hosts, warning/critical thresholds                  |
 | `Syncthing` | API URL, key, folder ID                                                    |
 | `Pipeline` | SSH hosts (Mac + PC), paths, Plex library section IDs                      |
+| `Ssh` | `LoopbackHop` (`Enabled`, `KeyPath`, `User`): when enabled every SSH/shell command runs through `ssh <User>@localhost` first, because an sshd session is exempt from the macOS Local Network + TCC limits that block the LaunchAgent process and its child `ssh`/`zsh` |
 | `Notifications` | Gmail SMTP credentials + reminder and recovery-grace intervals             |
 | `Ntfy` | Self-hosted ntfy base URL, topic, optional auth token                      |
 | `Tautulli` | Base URL + API key for Plex watch-history lookups                          |
@@ -303,7 +306,7 @@ All values are configurable via `appsettings.json`:
 | `StaleMedia` | Unwatched-threshold days, auto-unmonitor toggle                            |
 | `TunnelHealth` | List of Cloudflare Tunnel endpoints to probe                               |
 | `BackupHealth` | SSH host, backups root path, warning/critical age, expected artifacts list |
-| `VpnWatchdog` | Enable toggle, reconnect cooldown minutes                                  |
+| `VpnWatchdog` | Enable toggle, `AutoReconnect` (off by default: a disconnected Mullvad is the owner's choice), reconnect cooldown minutes |
 | `Remediation` | Enable toggle, lookback minutes, per-pattern rules (check → action)        |
 | `LibraryIntegrity` | Remediation toggle + folder floors (folders are listed through Radarr/Sonarr, no paths needed) |
 | `GmailCleanup` | IMAP credentials, archive-age, label rules                                 |
