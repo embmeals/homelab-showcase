@@ -22,7 +22,6 @@ These are the services this app monitors — some are publicly accessible:
 | Tautulli | [stats.emills.net](https://stats.emills.net)       | Plex viewing statistics |
 | Immich | [photos.emills.net](https://photos.emills.net)     | Photo library |
 | This Dashboard | [homelab.emills.net](https://homelab.emills.net)   | Monitoring dashboard |
-| Portainer | [docker.emills.net](https://docker.emills.net)     | Docker management |
 
 *Protected services require email OTP via Cloudflare Access.*
 
@@ -171,8 +170,8 @@ Crons in `JobSchedules` are read in the Mac's local time zone, so `0 3 * * *` me
 │  Mac (M3 Pro) — Primary Server, always on           │
 │                                                     │
 │  Native: Plex, Radarr, Sonarr, Prowlarr             │
-│  Docker: Seerr, Tautulli, Immich, Portainer,        │
-│          Kometa, Watchtower, RustDesk               │
+│  Docker: Seerr, Tautulli, Immich, Kometa,           │
+│          Watchtower                                 │
 │  Infra:  Cloudflare Tunnel, This Dashboard          │
 │  Storage: NAS media over NFS (~/NAS/media),         │
 │           Backups 1.8TB (photos + weekly backups)   │
