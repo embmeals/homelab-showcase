@@ -266,10 +266,12 @@ src/homelabBackend/
 │   ├── DashboardRegistrations.cs       (Razor + Hangfire dashboard)
 │   ├── StatusEndpoints.cs              (read-only /api/*)
 │   ├── ActionEndpoints.cs              (mutating /api/actions/*)
+│   ├── AlertEndpoints.cs               (POST /api/alerts, X-Alert-Key)
 │   └── RecurringJobSchedule.cs         (cron wiring)
 ├── Jobs/                       — one file per Hangfire job + OnDemandActions
 ├── Infrastructure/             — SSH, HTTP, Email, byte formatting
-│   └── Notifications/          — router, channels, severity enum
+│   ├── Alerts/                 — key check, validation, email + ntfy delivery
+│   └── Notifications/          — router, channels, ntfy publisher, severity enum
 ├── Data/                       — EF Core entities + HomelabDbContext
 ├── Models/
 │   ├── Configuration/          — IOptions<T> config types
